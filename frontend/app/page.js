@@ -1,4 +1,6 @@
 "use client";
+
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -48,21 +50,24 @@ export default function Home() {
           <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>No professors found</p>
         ) : (
           filtered.map((prof) => (
-          <div
-            key={prof.id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "20px",
-              borderRadius: "12px",
-              background: "#111",
-              color: "white",
-            }}
-          >
+          <Link href={`/professor/${prof.id}`} key={prof.id}>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                padding: "20px",
+                borderRadius: "12px",
+                background: "#111",
+                color: "white",
+                cursor: "pointer"
+              }}
+            >
             <h2>{prof.name}</h2>
             <p>{prof.department}</p>
             <p>⭐ {prof.rating ?? "N/A"}</p>
           </div>
-        )))}
+          </Link>
+          ))
+        )}
       </div>
     </div>
   );
