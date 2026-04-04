@@ -29,3 +29,22 @@ app.get('/professors', async (req, res) => {
 app.listen(5001, () => {
   console.log('Server running on port 5001');
 });
+
+app.get("/professors/:id", async (req, res) => {
+  const { id } = req.params;
+
+  console.log("HIT /professors/:id", id);
+
+  const { data, error } = await supabase
+    .from("professors")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.log("ERROR:", error);
+    return res.status(500).json({ error });
+  }
+
+  res.json(data);
+});
