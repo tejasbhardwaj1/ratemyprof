@@ -55,17 +55,6 @@ npm run dev
 * `GET /reviews/:professor_id` → get reviews
 * `POST /reviews` → add review
 
-
----
-
-## 🔮 Future Improvements
-
-* Authentication (user accounts)
-* Better UI/UX (design system)
-* Sorting & filtering reviews
-* Edit/delete reviews
-* Deployment
-
 ---
 
 ## 👨‍💻 Author
