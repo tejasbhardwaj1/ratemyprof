@@ -10,18 +10,23 @@ export default function ProfessorPage() {
   const [reviews, setReviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const params = useParams();
+//
+//    /professor/278fsbfsj
+//
 
 
   useEffect(() => {
     // fetch professor
     fetch(`http://localhost:5001/professors/${params.id}`)
-      .then(res => res.json())
-      .then(data => setProf(data));
+    .then(res => res.json())
+    .then(data => setProf(data))
+    .catch(err => console.error(err));
   
     // fetch reviews
     fetch(`http://localhost:5001/reviews/${params.id}`)
-      .then(res => res.json())
-      .then(data => setReviews(data));
+    .then(res => res.json())
+    .then(data => setReviews(Array.isArray(data) ? data : []))
+    .catch(err => console.error(err));
   
   }, [params.id]);
 
@@ -67,7 +72,7 @@ export default function ProfessorPage() {
       const newReviews = await fetch(`http://localhost:5001/reviews/${params.id}`)
         .then((res) => res.json());
 
-      setReviews(newReviews);
+      setReviews(Array.isArray(newReviews) ? newReviews : []);
 
       alert("Review submitted ✅");
 

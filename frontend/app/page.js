@@ -10,12 +10,12 @@ export default function Home() {
   useEffect(() => {
     fetch("http://localhost:5001/professors")
       .then((res) => res.json())
-      .then((data) => setProfs(data))
+      .then((data) => setProfs(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));
   }, []);
 
   
-  const filtered = profs.filter((prof) =>
+  const filtered = (Array.isArray(profs) ? profs : []).filter((prof) =>
     (prof.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
     (prof.department?.toLowerCase() || "").includes(search.toLowerCase())
   ); 
