@@ -8,7 +8,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5001/professors")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/professors`)
       .then((res) => res.json())
       .then((data) => setProfs(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));

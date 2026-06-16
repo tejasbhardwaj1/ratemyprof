@@ -17,13 +17,13 @@ export default function ProfessorPage() {
 
   useEffect(() => {
     // fetch professor
-    fetch(`http://localhost:5001/professors/${params.id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/professors/${params.id}`)
     .then(res => res.json())
     .then(data => setProf(data))
     .catch(err => console.error(err));
   
     // fetch reviews
-    fetch(`http://localhost:5001/reviews/${params.id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${params.id}`)
     .then(res => res.json())
     .then(data => setReviews(Array.isArray(data) ? data : []))
     .catch(err => console.error(err));
@@ -49,7 +49,7 @@ export default function ProfessorPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("http://localhost:5001/reviews", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export default function ProfessorPage() {
 
       console.log(data);
 
-      const newReviews = await fetch(`http://localhost:5001/reviews/${params.id}`)
+      const newReviews = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${params.id}`)
         .then((res) => res.json());
 
       setReviews(Array.isArray(newReviews) ? newReviews : []);
