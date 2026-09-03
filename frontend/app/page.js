@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [profs, setProfs] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/professors`)
@@ -13,6 +14,7 @@ export default function Home() {
       .then((data) => {
         const list = Array.isArray(data) ? data : [];
         setProfs(list);
+        setLoading(false);
 
         Promise.all(
           list.map((prof) =>
@@ -37,7 +39,10 @@ export default function Home() {
           );
         });
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
   
@@ -72,7 +77,7 @@ export default function Home() {
           gap: "20px",
         }}
       >
-        {filtered.length === 0 ? (
+        {loading ? null : filtered.length === 0 ? (
           <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>No professors found</p>
         ) : (
           filtered.map((prof) => (
