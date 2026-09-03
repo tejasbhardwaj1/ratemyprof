@@ -10,7 +10,33 @@ export default function Home() {
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/professors`)
       .then((res) => res.json())
-      .then((data) => setProfs(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setProfs(list);
+
+        Promise.all(
+          list.map((prof) =>
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${prof.id}`)
+              .then((res) => res.json())
+              .then((reviews) => {
+                const revs = Array.isArray(reviews) ? reviews : [];
+                const avg =
+                  revs.length > 0
+                    ? (revs.reduce((sum, r) => sum + r.rating, 0) / revs.length).toFixed(1)
+                    : null;
+                return { id: prof.id, avg };
+              })
+              .catch(() => ({ id: prof.id, avg: null }))
+          )
+        ).then((results) => {
+          setProfs((prev) =>
+            prev.map((prof) => {
+              const match = results.find((r) => r.id === prof.id);
+              return match ? { ...prof, rating: match.avg } : prof;
+            })
+          );
+        });
+      })
       .catch((err) => console.error(err));
   }, []);
 
