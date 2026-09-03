@@ -63,7 +63,7 @@ export default function Home() {
             >
             <h2>{prof.name}</h2>
             <p>{prof.department}</p>
-            <p>⭐ {prof.rating ?? "N/A"}</p>
+            {prof.rating != null && <p>⭐ {prof.rating}</p>}
           </div>
           </Link>
           ))

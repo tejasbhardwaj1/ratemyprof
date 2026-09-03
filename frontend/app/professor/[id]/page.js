@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function ProfessorPage() {
   const [prof, setProf] = useState(null);
@@ -97,6 +98,18 @@ export default function ProfessorPage() {
 
   return (
     <div style={{ padding: "40px", color: "white" }}>
+      <Link
+        href="/"
+        style={{
+          color: "white",
+          textDecoration: "none",
+          display: "inline-block",
+          marginBottom: "20px",
+        }}
+      >
+        ← Back
+      </Link>
+
       <h1>{prof.name}</h1>
       <p>{prof.department}</p>
       <p>⭐ {avgRating}</p>
