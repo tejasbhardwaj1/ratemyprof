@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ProfessorPage() {
   const [prof, setProf] = useState(null);
@@ -10,6 +11,8 @@ export default function ProfessorPage() {
   const [comment, setComment] = useState("");
   const [reviews, setReviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const params = useParams();
 //
 //    /professor/278fsbfsj
@@ -30,6 +33,34 @@ export default function ProfessorPage() {
     .catch(err => console.error(err));
   
   }, [params.id]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.href },
+    });
+
+    if (error) {
+      console.error(error);
+      alert("Something went wrong signing in");
+    }
+  };
 
   const handleSubmit = async () => {
 
@@ -96,6 +127,9 @@ export default function ProfessorPage() {
       ).toFixed(1)
     : "N/A";
 
+  const isAuthorized =
+    !authLoading && user?.email?.toLowerCase().endsWith("@flame.edu.in");
+
   return (
     <div style={{ padding: "40px", color: "white" }}>
       <Link
@@ -114,48 +148,63 @@ export default function ProfessorPage() {
       <p>{prof.department}</p>
       <p>⭐ {avgRating}</p>
 
-      <div style={{ marginTop: "30px" }}> 
+      <div style={{ marginTop: "30px" }}>
         <h3>Add Review</h3>
 
-        <input
-          type="number"
-          placeholder="Rating (1-10)"
-          min = "1"
-          max = "10"
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        />
+        {authLoading ? null : isAuthorized ? (
+          <>
+            <input
+              type="number"
+              placeholder="Rating (1-10)"
+              min = "1"
+              max = "10"
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                width: "100%",
+                borderRadius: "8px",
+              }}
+            />
 
-        <textarea
-          placeholder="Write your review..."
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          style={{
-            padding: "10px",
-            marginBottom: "10px",
-            width: "100%",
-            borderRadius: "8px",
-          }}
-        />
+            <textarea
+              placeholder="Write your review..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                width: "100%",
+                borderRadius: "8px",
+              }}
+            />
 
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            cursor: isSubmitting ? "not-allowed" : "pointer",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            opacity: isSubmitting ? 0.6 : 1,
-          }}
-        >
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              style={{
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                opacity: isSubmitting ? 0.6 : 1,
+              }}
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handleGoogleSignIn}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "8px",
+              cursor: "pointer",
+            }}
+          >
+            Sign in with your FLAME email to write a review
+          </button>
+        )}
 
       </div>
 
