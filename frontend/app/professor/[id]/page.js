@@ -35,10 +35,7 @@ export default function ProfessorPage() {
   }, [params.id]);
 
   useEffect(() => {
-    console.log("[debug] hash present on mount:", window.location.hash.length > 0);
-
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("[debug] getSession:", { hasSession: !!session, errorMessage: error?.message });
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
@@ -46,7 +43,6 @@ export default function ProfessorPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("[debug] onAuthStateChange:", { event: _event, hasSession: !!session });
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
