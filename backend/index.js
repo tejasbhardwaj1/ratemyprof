@@ -49,8 +49,33 @@ app.get("/professors/:id", async (req, res) => {
   res.json(data);
 });
 
+/* VERIFY SUPABASE SESSION + FLAME EMAIL */
+async function requireFlameAuth(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ error: "Missing or invalid token" });
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error || !data?.user) {
+    console.error("Auth check failed");
+    return res.status(401).json({ error: "Missing or invalid token" });
+  }
+
+  const email = data.user.email?.toLowerCase() || "";
+  if (!email.endsWith("@flame.edu.in")) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  req.verifiedUser = { id: data.user.id, email: data.user.email };
+  next();
+}
+
 /* ADD A REVIEW */
-app.post("/reviews", async (req, res) => {
+app.post("/reviews", requireFlameAuth, async (req, res) => {
   console.log("HIT POST /reviews");
   console.log("BODY:", req.body);
 
@@ -67,6 +92,8 @@ app.post("/reviews", async (req, res) => {
         professor_id,
         rating,
         comment,
+        user_id: req.verifiedUser.id,
+        user_email: req.verifiedUser.email,
       },
     ]);
 
