@@ -5,6 +5,31 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
+function formatRelativeTime(dateString) {
+  if (!dateString) return null;
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return null;
+
+  const diffMs = Date.now() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+
+  const units = [
+    ["year", 60 * 60 * 24 * 365],
+    ["month", 60 * 60 * 24 * 30],
+    ["week", 60 * 60 * 24 * 7],
+    ["day", 60 * 60 * 24],
+    ["hour", 60 * 60],
+    ["minute", 60],
+  ];
+
+  for (const [label, secondsInUnit] of units) {
+    const value = Math.floor(diffSec / secondsInUnit);
+    if (value >= 1) return `${value} ${label}${value > 1 ? "s" : ""} ago`;
+  }
+  return "just now";
+}
+
 export default function ProfessorPage() {
   const [prof, setProf] = useState(null);
   const [rating, setRating] = useState("");
@@ -217,20 +242,28 @@ export default function ProfessorPage() {
         {reviews.length === 0 ? (
           <p>No reviews yet</p>
         ) : (
-          reviews.map((rev) => (
-            <div
-              key={rev.id}
-              style={{
-                border: "1px solid #333",
-                padding: "15px",
-                marginBottom: "10px",
-                borderRadius: "10px",
-              }}
-            >
-              <p>⭐ {rev.rating}</p>
-              <p>{rev.comment}</p>
-            </div>
-          ))
+          reviews.map((rev) => {
+            const relativeTime = formatRelativeTime(rev.created_at);
+
+            return (
+              <div
+                key={rev.id}
+                style={{
+                  border: "1px solid #333",
+                  padding: "15px",
+                  marginBottom: "10px",
+                  borderRadius: "10px",
+                }}
+              >
+                <p>⭐ {rev.rating}</p>
+                <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                  {rev.reviewer_name || "FLAME student"}
+                  {relativeTime ? ` · ${relativeTime}` : ""}
+                </p>
+                <p>{rev.comment}</p>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

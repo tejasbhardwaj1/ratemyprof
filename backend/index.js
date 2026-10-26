@@ -50,6 +50,18 @@ app.get("/professors/:id", async (req, res) => {
 });
 
 /* VERIFY SUPABASE SESSION + FLAME EMAIL */
+function formatReviewerName(rawName) {
+  const trimmed = (rawName || "").trim();
+  if (!trimmed) return null;
+
+  const parts = trimmed.split(/\s+/);
+  const first = parts[0];
+  const lastInitial = parts.length > 1 ? parts[parts.length - 1][0] : null;
+
+  const formatted = lastInitial ? `${first} ${lastInitial}.` : first;
+  return formatted.slice(0, 40);
+}
+
 async function requireFlameAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
@@ -70,7 +82,19 @@ async function requireFlameAuth(req, res, next) {
     return res.status(403).json({ error: "Forbidden" });
   }
 
-  req.verifiedUser = { id: data.user.id, email: data.user.email };
+  const googleIdentity = data.user.identities?.find((i) => i.provider === "google");
+  const rawName =
+    googleIdentity?.identity_data?.full_name ||
+    googleIdentity?.identity_data?.name ||
+    data.user.user_metadata?.full_name ||
+    data.user.user_metadata?.name ||
+    null;
+
+  req.verifiedUser = {
+    id: data.user.id,
+    email: data.user.email,
+    reviewerName: formatReviewerName(rawName),
+  };
   next();
 }
 
@@ -94,6 +118,7 @@ app.post("/reviews", requireFlameAuth, async (req, res) => {
         comment,
         user_id: req.verifiedUser.id,
         user_email: req.verifiedUser.email,
+        reviewer_name: req.verifiedUser.reviewerName,
       },
     ]);
 
@@ -113,8 +138,9 @@ app.get("/reviews/:professor_id", async (req, res) => {
 
   const { data, error } = await supabase
     .from("simple_reviews")
-    .select("*")
-    .eq("professor_id", professor_id);
+    .select("id, professor_id, rating, comment, created_at, reviewer_name")
+    .eq("professor_id", professor_id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("ERROR:", error);
