@@ -14,18 +14,50 @@ app.use(express.json());
 app.get('/professors', async (req, res) => {
   console.log("HIT /professors");
 
-  const { data, error } = await supabase
+  const { data: professors, error: profError } = await supabase
     .from('professors')
     .select('*');
 
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
-
-  if (error) {
-    return res.status(500).json(error);
+  if (profError) {
+    return res.status(500).json(profError);
   }
 
-  res.json(data);
+  const PAGE_SIZE = 1000;
+  const stats = new Map(); // professor_id -> { sum, count }
+  let from = 0;
+
+  while (true) {
+    const to = from + PAGE_SIZE - 1;
+    const { data: page, error: reviewError } = await supabase
+      .from('simple_reviews')
+      .select('professor_id, rating')
+      .order('id')
+      .range(from, to);
+
+    if (reviewError) {
+      return res.status(500).json({ error: reviewError });
+    }
+
+    for (const row of page) {
+      if (!Number.isFinite(row.rating)) continue;
+      const entry = stats.get(row.professor_id) || { sum: 0, count: 0 };
+      entry.sum += row.rating;
+      entry.count += 1;
+      stats.set(row.professor_id, entry);
+    }
+
+    if (page.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  const result = professors.map((prof) => {
+    const entry = stats.get(prof.id);
+    const avg_rating = entry ? Math.round((entry.sum / entry.count) * 10) / 10 : null;
+    const review_count = entry ? entry.count : 0;
+    return { ...prof, avg_rating, review_count };
+  });
+
+  res.json(result);
 });
 
 

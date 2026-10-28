@@ -18,29 +18,6 @@ export default function Home() {
         const list = Array.isArray(data) ? data : [];
         setProfs(list);
         setLoading(false);
-
-        Promise.all(
-          list.map((prof) =>
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${prof.id}`)
-              .then((res) => res.json())
-              .then((reviews) => {
-                const revs = Array.isArray(reviews) ? reviews : [];
-                const avg =
-                  revs.length > 0
-                    ? (revs.reduce((sum, r) => sum + r.rating, 0) / revs.length).toFixed(1)
-                    : null;
-                return { id: prof.id, avg };
-              })
-              .catch(() => ({ id: prof.id, avg: null }))
-          )
-        ).then((results) => {
-          setProfs((prev) =>
-            prev.map((prof) => {
-              const match = results.find((r) => r.id === prof.id);
-              return match ? { ...prof, rating: match.avg } : prof;
-            })
-          );
-        });
       })
       .catch((err) => {
         console.error(err);
@@ -172,7 +149,7 @@ export default function Home() {
             >
             <h2>{prof.name}</h2>
             <p>{prof.department}</p>
-            {prof.rating != null && <p>⭐ {prof.rating}</p>}
+            {prof.avg_rating != null && <p>⭐ {prof.avg_rating.toFixed(1)}</p>}
           </div>
           </Link>
           ))
