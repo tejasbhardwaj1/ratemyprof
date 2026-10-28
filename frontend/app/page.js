@@ -8,21 +8,33 @@ export default function Home() {
   const [profs, setProfs] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [slowLoad, setSlowLoad] = useState(false);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    const timer = setTimeout(() => setSlowLoad(true), 4000);
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/professors`)
       .then((res) => res.json())
       .then((data) => {
-        const list = Array.isArray(data) ? data : [];
-        setProfs(list);
-        setLoading(false);
+        if (!Array.isArray(data)) {
+          setError(true);
+          return;
+        }
+        setProfs(data);
       })
       .catch((err) => {
         console.error(err);
+        setError(true);
+      })
+      .finally(() => {
+        clearTimeout(timer);
         setLoading(false);
       });
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -132,7 +144,18 @@ export default function Home() {
           gap: "20px",
         }}
       >
-        {loading ? null : filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+            <p>Loading professors...</p>
+            {slowLoad && (
+              <p>The server may be waking up. This can take up to a minute the first time.</p>
+            )}
+          </div>
+        ) : error ? (
+          <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+            Couldn&apos;t load professors. Please refresh in a minute.
+          </p>
+        ) : filtered.length === 0 ? (
           <p style={{ gridColumn: "1 / -1", textAlign: "center" }}>No professors found</p>
         ) : (
           filtered.map((prof) => (
