@@ -122,7 +122,8 @@ export default function ProfessorPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to submit review");
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.error || "Failed to submit review");
       }
 
       const data = await res.json();
@@ -140,7 +141,7 @@ export default function ProfessorPage() {
       setComment("");
     } catch (err) {
       console.error(err);
-      alert("Something Went Wrong");
+      alert(err.message || "Something Went Wrong");
     } finally {
       setIsSubmitting(false);
     }

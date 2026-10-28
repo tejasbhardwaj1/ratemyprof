@@ -156,6 +156,9 @@ app.post("/reviews", requireFlameAuth, async (req, res) => {
 
   if (error) {
     console.error("ERROR:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "You've already reviewed this professor." });
+    }
     return res.status(500).json({ error });
   }
 
